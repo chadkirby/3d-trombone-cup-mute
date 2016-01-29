@@ -1,20 +1,20 @@
 $fs = 1;
 $fa = 6;
-envelope = [5.9 * 25.4, 5.9 * 25.4, 5.9 * 25.4];
+envelope = [145, 145, 160];
 
 bottomD = 90;
 topD = 35;
 
-module flare(inflate = 0, zz = 6) {
+module flare(id = bottomD, od = envelope[1], zz = 6) {
     radius = 50;
     hull() {
-        translate([0,0,zz]) cylinder(d=bottomD, h=2, center=false);
-        for (xx=[-(envelope[0] + inflate)/2:(envelope[0] + inflate):(envelope[0] + inflate)/2]) {
-            for (yy=[-(envelope[1] + inflate)/2:(envelope[1] + inflate):(envelope[1] + inflate)/2]) {
+        translate([0,0,zz]) cylinder(d=id, h=2, center=false);
+        for (xx=[-od/2:od:od/2]) {
+            for (yy=[-od/2:od:od/2]) {
                 translate([
                     xx - sign(xx) * radius,
                     yy - sign(yy) * radius ,
-                    45 - inflate/2 + zz
+                    45 + zz
                 ]) cylinder(r = radius, h=1, center=false);
             }
         }
@@ -23,8 +23,8 @@ module flare(inflate = 0, zz = 6) {
 
 module cup() {
     difference() {
-        flare();
-        translate([0,0,2]) flare(-4);
+        flare(bottomD, envelope[1]);
+        translate([0,0,2]) flare(bottomD - 6, envelope[1] - 2);
     }
 }
 
@@ -63,7 +63,7 @@ module bell(inflate = 0, zz = 60) {
 }
 module corksCone(inflate = 0) {
     intersection() {
-        bell(-14 + inflate);
+        bell(-13 + inflate);
         translate([0,0,envelope[2] - 48])
             cylinder(r=100, h=48, center=false);
 
@@ -72,8 +72,8 @@ module corksCone(inflate = 0) {
 module corks() {
     intersection() {
         difference() {
-            bell(-2);
-            bell(-14);
+            bell(-1);
+            bell(-13);
         }
         translate([0,0,envelope[2] - 24]) {
             for (angle=[0:120:240]) {
@@ -90,12 +90,12 @@ difference() {
         cone();
     }
     difference() {
-        cone(-4);
+        cone(-2.5);
         cylinder(r=100, h=2, center=false);
     }
 }
 *corks();
 %difference() {
     *bell();
-    bell(-2);
+    bell(-1);
 }
