@@ -42,10 +42,34 @@ module cone(inflate = 0) {
 
 module bell(inflate = 0, zz = 60) {
     rr = [
+    2.11,
+    1.5,
+    1.25,
+    0.97,
+    0.88,
+    0.73,
+    0.66,
+    0.61,
+    0.56,
+    0.52,
+    0.48,
+    0.45,
+    0.42,
+    0.395,
+    0.38,
+    0.36
+    ];
+    for (ii=[0:14]) {
+        translate([0,0,zz + ii*10])
+            cylinder(d1=rr[ii] * 100 + inflate, d2 = rr[ii+1] * 100 + inflate, h=10, center=false);
+    }
+}
+module bell0(inflate = 0, zz = 60) {
+    rr = [
         106,
         76,
         60,
-        49.5,
+        49,
         42,
         37,
         33,
@@ -63,7 +87,7 @@ module bell(inflate = 0, zz = 60) {
 }
 module corksCone(inflate = 0) {
     intersection() {
-        bell(-13 + inflate);
+        bell(-11 + inflate);
         translate([0,0,envelope[2] - 48])
             cylinder(r=100, h=48, center=false);
 
@@ -73,7 +97,7 @@ module corks() {
     intersection() {
         difference() {
             bell(-1);
-            bell(-13);
+            bell(-11);
         }
         translate([0,0,envelope[2] - 24]) {
             for (angle=[0:120:240]) {
@@ -90,12 +114,13 @@ difference() {
         cone();
     }
     difference() {
-        cone(-2.5);
+        cone(-8);
         cylinder(r=100, h=2, center=false);
     }
 }
 *corks();
-%difference() {
+*difference() {
     *bell();
     bell(-1);
 }
+%bell(-1);
