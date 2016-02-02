@@ -1,9 +1,54 @@
-$fs = 1;
-$fa = 6;
-envelope = [145, 145, 160];
+use <../BezierScad/BezierScad.scad>
+// $fs = 1;
+// $fa = 6;
+envelope = [165, 145, 165];
 
-bottomD = 90;
+bottomD = 70;
 topD = 35;
+
+module bezMute() {
+rotate_extrude()
+{
+    BezLine( [
+      [bottomD/2, envelope[2] * 0.2],
+      [(bottomD - topD) * 0.41, envelope[2] * 0.4],
+      [topD/2 - 1, envelope[2]],
+    ] , width = [5, 3], showCtls = false );
+    BezLine( [
+      [1, 6],
+      [bottomD/2 * 1, 1],
+      [bottomD/2 * 1.15, envelope[2] * 0.15],
+      [bottomD/2, envelope[2] * 0.2],
+    ] , width = [3, 5], showCtls = true );
+    BezLine( [
+      [25, 9],
+      [envelope[0] * 0.3, 10],
+      [envelope[0] * 0.45, 30],
+      [envelope[0] * 0.5, 55],
+    ] , width = [4, 2], center=true );
+}
+}
+module wedge(d, h, center, arc) {
+    hull() {
+        cylinder(d=0.1, h=h, center=center);
+        rotate([0,0,arc/2]) translate([0, d*2]) cylinder(d=0.1, h=h, center=center);
+        rotate([0,0,-arc/2]) translate([0, d*2]) cylinder(d=0.1, h=h, center=center);
+        translate([0, d*2]) cylinder(d=0.1, h=h, center=center);
+    }
+}
+module _arcOfCyl(d, h, center=true, arc=90) {
+    if (arc > 180) {
+        difference() {
+            cylinder(d=d, h=h, center=center);
+            wedge(d=d, h=h + 1, center=center, arc=360 - arc);
+        }
+    } else {
+        intersection() {
+            cylinder(d=d, h=h, center=center);
+            wedge(d=d, h=h + 1, center=center, arc=arc);
+        }
+    }
+}
 
 module flare(id = bottomD, od = envelope[1], zz = 6) {
     radius = 50;
@@ -32,11 +77,10 @@ module cone(inflate = 0) {
     hull() {
         cylinder(d=bottomD + inflate, h=6, center=false);
         intersection() {
-            cylinder(d=bottomD + inflate, h=envelope[2] - 47, center=false);
-            corksCone(inflate);
+            cylinder(d=topD + inflate, h=envelope[2], center=false);
         }
     }
-    corksCone(inflate);
+    *corksCone(inflate);
     *cylinder(d1=bottomD + inflate, d2=topD + inflate, h=envelope[2], center=false);
 }
 
@@ -108,19 +152,16 @@ module corks() {
 
     }
 }
-difference() {
-    union() {
-        cup();
-        cone();
+
+if (false) {
+    rotate([0,0,45]) rotate([0, 90]) rotate([0,0,30])
+    translate([0,-20,-envelope[2]/2 + 7])
+    intersection() {
+        bezMute();
+        _arcOfCyl(d=200, h = 200, arc = 60, center=false);
     }
-    difference() {
-        cone(-8);
-        cylinder(r=100, h=2, center=false);
-    }
+    %cube(size=[145, 145, 150], center=true);
+} else {
+    !bezMute();
+    %bell(-1);
 }
-*corks();
-*difference() {
-    *bell();
-    bell(-1);
-}
-%bell(-1);
