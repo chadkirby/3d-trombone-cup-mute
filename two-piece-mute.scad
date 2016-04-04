@@ -11,7 +11,7 @@ function sideLength(d) = d * sin(180/segments);
 muteLower();
 
 //wingTimes()
-wing($fn = segments);
+//wing($fn = segments);
 
 module wingTimes() {
     arc = 360 / segments;
@@ -53,20 +53,9 @@ module muteLower() {
     }
     insertable(dd = 75, zz = height);
 
-    difference() {
-        hull() {
-            muteBase();
 
-            translate([0,0,45])
-            cylinder(d=10, h=0.1, center=false);
-
-        }
-        cylinder(d=inDiameter(80), $fn = segments, h=12, center=false);
-
-        translate([0,0,12])
-        cylinder(d1=inDiameter(80), d2=inDiameter(3), $fn = segments, h=32, center=false);
-        wingTimes() wingScrew();
-    }
+    translate([0,0,15])
+    cylinder(d=inDiameter(90), $fn = segments, h=2, center=false);
 
 }
 
@@ -109,6 +98,13 @@ module foldWing() {
     rotate([38,0])
     translate([0, -dd/2, -15])
     children();
+}
+
+module chamferedWing() {
+    difference() {
+        foldWing()
+        wing();
+    }
 }
 
 module wing() {
