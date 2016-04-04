@@ -2,70 +2,74 @@ use <mute-top.scad>;
 $fs = 1;
 $fa = 6;
 
-height = 125;
+height = 112.5;
+segments = 6;
+function inDiameter(d) = d  / cos(180/segments);
+function sideLength(d) = d * sin(180/segments);
 
-translate([0,0,height + 0.5]) muteTop();
-*muteMid();
+*translate([0,0,height + 0.5]) muteTop();
 muteLower();
 
 //wingTimes()
-wing();
-segments = 6;
+wing($fn = segments);
+
+module wingTimes() {
+    arc = 360 / segments;
+    for (angle=[0 : arc : arc * (segments - 1)]) rotate([0,0,angle]) children();
+}
+
+module muteBase(inflate = 0) {
+    dd = 100;
+    rotSeg()
+    cylinder(d=inDiameter(dd + inflate), $fn = segments, h=15, center=false);;
+}
+module rotSeg() {
+    rotate([0,0, 0/segments])
+    children();
+}
 module muteLower() {
-    dd = 75 / cos(180/segments);
+    dd = 100;
     difference() {
-        hull() {
-            rotate([0,0, 0/segments])
-            cylinder(d=dd, $fn = segments, h=25, center=false);
-            translate([0,0,height - 1])
-            cylinder(d=75, h=1, center=false);
+        union() {
+            muteBase();
+            rotSeg()
+            hull() {
+                translate([0,0,15])
+                cylinder(d=inDiameter(dd - 5), $fn = segments, h=1, center=false);
+
+                translate([0,0,height - 1])
+                cylinder(d=75, h=1, center=false);
+            }
         }
         translate([0,0,-0.1])
-        cylinder(d=55, h=height + 1, center=false);
-
-        translate([0,0,20])
-        rotate_extrude($fn = segments)
-        translate([dd/2, 0])
         hull() {
-            translate([-1,0])
-            circle(d=3, $fn=12);
+            cylinder(d=inDiameter(85), $fn = segments, h=15, center=false);
 
-            translate([5,0])
-            circle(d=12, $fn=12);
+            translate([0,0,height])
+            cylinder(d=55, h=0.2, center=false);
+
         }
+        wingTimes() wingScrew();
     }
     insertable(dd = 75, zz = height);
-}
 
-module muteBase() {
     difference() {
-        cylinder(d1=90, d2=140, h=35, center=false);
+        hull() {
+            muteBase();
 
-        translate([0,0,-0.1])
-        cylinder(d1=70, d2=120, h=35.2, center=false);
+            translate([0,0,45])
+            cylinder(d=10, h=0.1, center=false);
 
-        wingTimes()
-        wingScrews();
+        }
+        cylinder(d=inDiameter(80), $fn = segments, h=12, center=false);
+
+        translate([0,0,12])
+        cylinder(d1=inDiameter(80), d2=inDiameter(3), $fn = segments, h=32, center=false);
+        wingTimes() wingScrew();
     }
+
 }
 
-module muteMid() {
-    steps = 8;
-    minZ = 35;
-    maxZ = height;
-    topD = 75;
-    botD = 140;
-    exp = 1.3;
-    curvedCyl(
-        steps = steps,
-        minZ = minZ,
-        maxZ = maxZ,
-        topD = topD,
-        botD = botD,
-        exp = exp
-    );
-    insertable(dd = topD, zz = height);
-}
 module insertable(dd, zz = height) {
     translate([0,0,zz])
     difference() {
@@ -76,26 +80,21 @@ module insertable(dd, zz = height) {
         topScrews();
     }
 }
-module curvedCyl(steps, minZ, maxZ, topD, botD, exp = 1) {
-    maxZ = maxZ;
+module curvedCyl(steps, height, topD, botD, exp = 1) {
+    minZ = 0;
+    maxZ = height;
     rangeZ = maxZ - minZ;
     rangeD = botD - topD;
     for (step=[ 0 : 1/steps : 1 - 1/steps]) {
-        d2 = topD + rangeD * pow(step, exp);
-        d1 = topD + rangeD * pow(step + 1/steps, exp);
+        p2 = pow(step, exp);
+        p1 = pow(step + 1/steps, exp);
+        d1 = topD + rangeD * p1;
+        d2 = topD + rangeD * p2;
 
         translate([0, 0, maxZ - step * rangeZ - rangeZ/steps])
-        difference() {
-            cylinder(d1=d1, d2=d2, h=rangeZ/steps, center=false);
-
-            translate([0,0,-0.1])
-            cylinder(d1=d1 - 20, d2=d2 - 20, h=rangeZ/steps + 0.2, center=false);
-        }
+        cylinder(d1=d1, d2=d2, h=rangeZ/steps, center=false);
     }
 }
-
-*rotate([0,0,90-72])
-wingTimes() wing();
 
 module topInsert() {
     difference() {
@@ -104,53 +103,77 @@ module topInsert() {
     }
 }
 
+module foldWing() {
+    dd = 100 - 5;
+    translate([0, dd/2 + 0.5, 15])
+    rotate([38,0])
+    translate([0, -dd/2, -15])
+    children();
+}
+
 module wing() {
-    r1 = 90/2 + 10.5;
-    r2 = 140/2 + 6;
-    offset = 130;
-    arc = 360/segments - 1;
-    rotate([0,0,-90 + arc/2])
-    difference() {
+    dd = 100 - 5;
+
+    //foldWing()
+    intersection() {
+        upperWing();
+        // wedge(d=1000, h=1000, center=false, arc=arc);
         union() {
-            difference() {
-                _arcOfCyl(d1=r1 * 2, d2=r2 * 2, h=35, arc = arc);
-                cylinder(r1=r1 - 10, r2=r2 - 10, h=35);
-            }
-
-            intersection() {
-                curvedCyl(
-                    steps = 8,
-                    minZ = 35,
-                    maxZ = 75,
-                    botD = (r2 * 2),
-                    topD = (r2 * 2) + 100,
-                    exp = 0.77
-                );
-                wedge(d=1000, h=100, center=false, arc=arc);
-            }
+            translate([0, 500])
+            cube(size=[sideLength(inDiameter(dd)), 1000, 1000], center=true);
         }
-
-        hull() {
-            translate([0,0,0.5])
-            muteMid();
-
-            muteBase();
-        }
-
-
-        wingScrews();
     }
 }
 
-module wingScrews() {
-    rotate([0,0,72])
-    for (aa=[0 : 72/2 : 72/2]) {
-        rotate([0, 0, aa])
-        translate([61, 0, 15])
+module upperWing() {
+    dd = 100 - 5;
+    r1 = inDiameter(dd)/2 + 10.5;
+    r2 = 225/2 + 5;
+    offset = 130;
+    arc = 360/segments - 1;
+    difference() {
+        union() {
+            translate([0, 0, 15])
+            curvedCyl(
+                steps = 8,
+                height = 60,
+                botD = (r1 * 2),
+                topD = (r2 * 2),
+                exp = 0.7
+            );
 
-        rotate([0, 180 + atan((25)/(100/2))])
-        m4Screw(thru = 4);
+            difference() {
+                union() {
+                    cylinder(d = inDiameter(dd + 25), h=5, center=false);
+                    cylinder(d = inDiameter(dd + 18), h=15, center=false);
+                }
+                muteBase();
+            }
+        }
+        translate([0, 0, 15])
+        curvedCyl(
+            steps = 8,
+            height = 60.1,
+            botD = ((r1 * 2) - 20),
+            topD = ((r2 * 2) - 10),
+            exp = 0.7,
+            $fn = segments
+        );
+        rotate([0,0,360/segments])
+        wingScrew();
     }
+}
+
+module wingScrew() {
+    $fn = 12;
+    rotate([0,0,180/segments])
+    for (xx=[-15 : 15 * 2 : 15]) {
+        translate([54, xx, 8])
+
+        rotate([0, 180])
+        m4Screw(thru = 4, head = 10);
+    }
+
 }
 
 

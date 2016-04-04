@@ -37,20 +37,20 @@ module insert(inflate = 0) {
     translate([0,0,hh]) cylinder(d1=d1, d2=d2, h=(d1-d2)/2, center=false);
 }
 
-module wingTimes() {
+module screwTimes() {
     for (angle=[0:72:72*4]) rotate([0,0,angle]) children();
 }
 
 module topScrews() {
-    wingTimes()
+    screwTimes()
     translate([-botOD/2 + 3.5, 0, 5.5])
     rotate([0, 90 - atan(height/(run/2))])
     m4Screw(thru = 1.5);
 }
-module m4Screw(thru = 4) {
+module m4Screw(thru = 4, head = 4) {
     _rx() {
         // screw head
-        translate([0,0,-4]) cylinder(d=10, h=4, center=false);
+        translate([0,0,-head]) cylinder(d=10, h=head, center=false);
         // through
         cylinder(d=5.5, h=thru, center=false);
         // thread
